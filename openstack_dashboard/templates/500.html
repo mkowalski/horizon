@@ -65,7 +65,7 @@
       <div id="text">
         {% block text %}
         <h2>{% trans "Something went wrong!" %}</h2>
-        <p>{% trans "An unexpected error has occurred. Try refreshing the page. If that doesn't help, contact your local administrator." %}</p>
+        <p>{% trans "An unexpected error has occurred. Try refreshing the page. If that doesn't help, create a ticket in ServiceNow.." %}</p>
         {% endblock %}
       </div>
       <div id="links">
@@ -75,6 +75,7 @@
         <p><a href="{{ CONF.HORIZON_CONFIG.bug_url }}">{% trans "Report Bug" %}</a></p>
         {% endif %}
         <p><a href="{{ CONF.HORIZON_CONFIG.help_url }}">{% trans "Help" %}</a></p>
+        <p><a href="{{ CONF.HORIZON_CONFIG.ticket_url }}">{% trans "Submit a ticket" %}</a></p>
         {% endblock %}
       </div>
     </div>
