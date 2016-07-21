@@ -114,3 +114,10 @@
     {% endfor %}
     </dl>
 </div>
+<div class="detail">
+    <h4>{% trans "Requests" %}</h4>
+    <hr class="header_rule">
+    <a class="btn btn-default btn-sm" target="_blank"
+       title="Click to request open CERN firewall for this instance"
+       href="https://network.cern.ch/sc/fcgi/sc.fcgi?Action=FirewallRequest&InterfaceName={{instance.name}}">Open CERN Firewall</a>
+</div>
