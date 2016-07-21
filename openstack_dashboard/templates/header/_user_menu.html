@@ -34,6 +34,13 @@
           </a>
         </li>
       {% endif %}
+      {% if HORIZON_CONFIG.ticket_url %}
+        <li>
+          <a href="{{ HORIZON_CONFIG.ticket_url }}" target="_new">
+            {% trans "Submit a ticket" %}
+          </a>
+        </li>
+      {% endif %}
       {% themes as available_themes %}
       {% if available_themes and available_themes|length > 1 %}
         <li class="divider"></li>
