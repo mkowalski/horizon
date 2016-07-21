@@ -164,7 +164,7 @@ class Hypervisor(base.APIDictWrapper):
 class NovaUsage(base.APIResourceWrapper):
     """Simple wrapper around contrib/simple_usage.py."""
 
-    _attrs = ['start', 'server_usages', 'stop', 'tenant_id',
+    _attrs = ['name', 'start', 'server_usages', 'stop', 'tenant_id',
               'total_local_gb_usage', 'total_memory_mb_usage',
               'total_vcpus_usage', 'total_hours']
 
