@@ -69,6 +69,8 @@
           <span ng-show="auth_type==='credentials'">{% trans "Sign In" %}</span>
           <span ng-hide="auth_type==='credentials'" ng-cloak>{% trans "Connect" %}</span>
         </button>
+        <button type="submit" class="btn btn-success pull-left" onclick="this.form.reset();this.form.action='{{ HORIZON_CONFIG.subscribe_url }}'">{% trans "Subscribe" %}</button>
+        <button type="submit" class="btn btn-info pull-left" onclick="this.form.reset();this.form.action='{{ HORIZON_CONFIG.help_url }}'">{% trans "Help" %}</button>
         <div class="clearfix"></div>
       {% endblock %}
     </div>
