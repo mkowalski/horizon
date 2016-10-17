@@ -181,7 +181,11 @@ INSTALLED_APPS = [
     'compressor',
     'horizon',
     'openstack_auth',
+    'piwik',
 ]
+
+PIWIK_SITE_ID = 1
+PIWIK_URL = 'http://piwik.example.com/'
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 AUTHENTICATION_BACKENDS = ('openstack_auth.backend.KeystoneBackend',)
