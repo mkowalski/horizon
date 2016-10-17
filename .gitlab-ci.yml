@@ -1,0 +1,37 @@
+stages:
+        - build
+        - deploy
+
+rpmbuild:
+        stage: build
+        image: docker.cern.ch/cloud-infrastructure/ciadm
+        script:
+                - printf '[cci7-iaas-newton] \nname=Cern rebuilds for IaaS Openstack \nbaseurl=http://linuxsoft.cern.ch/internal/repos/iaas7-newton-stable/x86_64/os/ \nenabled=1 \ngpgcheck=0 \npriority=5 \n' > /etc/yum.repos.d/cci7-iaas-newton.repo
+                - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+                - export parser=(${CI_BUILD_TAG//-/ })
+                - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g python-django-horizon.spec
+                - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g python-django-horizon.spec
+                - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/rpmbuild.sh | bash
+
+kojicheck:
+        stage: build
+        image: docker.cern.ch/cloud-infrastructure/ciadm
+        script:
+                - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+                - export parser=(${CI_BUILD_TAG//-/ })
+                - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g python-django-horizon.spec
+                - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g python-django-horizon.spec
+                - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojicheck.sh | bash
+
+kojibuild:
+        stage: deploy
+        image: docker.cern.ch/cloud-infrastructure/ciadm
+        only:
+                - tags
+        script:
+                - export DIST='.el7.cern'
+                - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+                - export parser=(${CI_BUILD_TAG//-/ })
+                - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g python-django-horizon.spec
+                - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g python-django-horizon.spec
+                - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojibuild.sh | bash
