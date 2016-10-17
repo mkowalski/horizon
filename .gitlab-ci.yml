@@ -1,0 +1,44 @@
+stages:
+  - test
+  - deploy
+
+before_script:
+  - printf '[cci7-iaas-ocata] \nname=Cern rebuilds for IaaS Openstack \nbaseurl=http://linuxsoft.cern.ch/internal/repos/iaas7-ocata-stable/x86_64/os/ \nenabled=1 \ngpgcheck=0 \npriority=5 \n' > /etc/yum.repos.d/cci7-iaas-ocata.repo
+  - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+  - export parser=(${CI_BUILD_TAG//-/ })
+  - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g python-django-horizon.spec
+  - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g python-django-horizon.spec
+  - yum install -y python-pip gcc python-devel
+  - pip install virtualenv
+
+rpmbuild:
+  stage: test
+  image: gitlab-registry.cern.ch/cloud/ciadm
+  except:
+    - tags
+  script:
+    - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/rpmbuild.sh | bash
+
+testsuite:
+  stage: test
+  image: gitlab-registry.cern.ch/cloud/ciadm
+  allow_failure: true
+  script:
+    - $CI_PROJECT_DIR/run_tests.sh --virtual-env --quiet --no-pep8
+
+kojicheck:
+  stage: deploy
+  image: gitlab-registry.cern.ch/cloud/ciadm
+  only:
+    - tags
+  script:
+    - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojicheck.sh | bash
+
+kojibuild:
+  stage: deploy
+  image: gitlab-registry.cern.ch/cloud/ciadm
+  only:
+    - tags
+  script:
+    - export DIST='.el7.cern'
+    - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojibuild.sh | bash
