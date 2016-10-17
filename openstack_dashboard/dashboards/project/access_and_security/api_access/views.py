@@ -77,7 +77,8 @@ def _get_openrc_credentials(request):
                        user=request.user,
                        interface='public',
                        os_endpoint_type='publicURL',
-                       region=getattr(request.user, 'services_region') or "")
+                       region=getattr(request.user, 'services_region') or "",
+                       token=request.user.token.id)
     return credentials
 
 
