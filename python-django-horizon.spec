@@ -48,6 +48,7 @@ BuildRequires:   python-selenium
 BuildRequires:   python-netaddr
 BuildRequires:   python-anyjson
 BuildRequires:   python-iso8601
+BuildRequires:   python-django-piwik
 
 # additional provides to be consistent with other django packages
 Provides: django-horizon = %{epoch}:%{version}-%{release}

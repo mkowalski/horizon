@@ -7,6 +7,7 @@
   <head>
     <meta content='IE=edge' http-equiv='X-UA-Compatible' />
     <meta content='text/html; charset=utf-8' http-equiv='Content-Type' />
+    {% load piwik_tags %}
     {% include "horizon/_custom_meta.html" %}
     <title>{% block title %}{% endblock %} - {% site_branding %}</title>
     {% comment %} Load CSS sheets before Javascript  {% endcomment %}
@@ -63,5 +64,6 @@
       {% include "horizon/_scripts.html" %}
     {% endblock %}
     <div id="modal_wrapper"></div>
+    {% tracking_code %}
   </body>
 </html>
