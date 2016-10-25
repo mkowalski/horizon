@@ -49,12 +49,9 @@
         'launchInstanceSourceForm',
         'launchInstanceFlavorForm',
         'launchInstanceNetworkForm',
-        'launchInstanceNetworkPortForm',
         'launchInstanceAccessAndSecurityForm',
         'launchInstanceKeypairForm',
         'launchInstanceConfigurationForm',
-        'launchInstanceServerGroupsForm',
-        'launchInstanceSchedulerHintsForm',
         'launchInstanceMetadataForm'
       ];
 

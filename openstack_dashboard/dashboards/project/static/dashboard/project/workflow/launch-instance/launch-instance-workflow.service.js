@@ -61,14 +61,6 @@
           requiredServiceTypes: ['network']
         },
         {
-          id: 'ports',
-          title: gettext('Network Ports'),
-          templateUrl: basePath + 'networkports/ports.html',
-          helpUrl: basePath + 'networkports/ports.help.html',
-          formName: 'launchInstanceNetworkPortForm',
-          requiredServiceTypes: ['network']
-        },
-        {
           id: 'keypair',
           title: gettext('Key Pair'),
           templateUrl: basePath + 'keypair/keypair.html',
@@ -81,23 +73,6 @@
           templateUrl: basePath + 'configuration/configuration.html',
           helpUrl: basePath + 'configuration/configuration.help.html',
           formName: 'launchInstanceConfigurationForm'
-        },
-        {
-          id: 'servergroups',
-          title: gettext('Server Groups'),
-          templateUrl: basePath + 'server-groups/server-groups.html',
-          helpUrl: basePath + 'server-groups/server-groups.help.html',
-          formName: 'launchInstanceServerGroupsForm',
-          policy: stepPolicy.serverGroups
-        },
-        {
-          id: 'hints',
-          title: gettext('Scheduler Hints'),
-          templateUrl: basePath + 'scheduler-hints/scheduler-hints.html',
-          helpUrl: basePath + 'scheduler-hints/scheduler-hints.help.html',
-          formName: 'launchInstanceSchedulerHintsForm',
-          policy: stepPolicy.schedulerHints,
-          setting: 'LAUNCH_INSTANCE_DEFAULTS.enable_scheduler_hints'
         },
         {
           id: 'metadata',
