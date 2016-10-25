@@ -24,16 +24,6 @@ from django.conf import settings
 class Admin(horizon.Dashboard):
     name = _("Admin")
     slug = "admin"
-
-    if getattr(settings, 'POLICY_CHECK_FUNCTION', None):
-        policy_rules = (('identity', 'admin_required'),
-                        ('image', 'context_is_admin'),
-                        ('volume', 'context_is_admin'),
-                        ('compute', 'context_is_admin'),
-                        ('network', 'context_is_admin'),
-                        ('orchestration', 'context_is_admin'),
-                        ('telemetry', 'context_is_admin'),)
-    else:
-        permissions = (tuple(utils.get_admin_permissions()),)
+    permissions = ('openstack.roles.admin',)
 
 horizon.register(Admin)
