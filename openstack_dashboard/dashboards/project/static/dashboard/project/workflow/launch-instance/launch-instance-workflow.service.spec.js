@@ -51,8 +51,6 @@
         'launchInstanceAccessAndSecurityForm',
         'launchInstanceKeypairForm',
         'launchInstanceConfigurationForm',
-        'launchInstanceServerGroupsForm',
-        'launchInstanceSchedulerHintsForm',
         'launchInstanceMetadataForm'
       ];
 
