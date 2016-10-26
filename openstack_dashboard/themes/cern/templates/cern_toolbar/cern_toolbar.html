@@ -1,0 +1,12 @@
+    <div id="cern-toolbar">
+      <h1><a href="http://cern.ch" title="CERN">CERN <span>Accelerating science</span></a></h1>
+      <ul class="cern-signedin">
+        <li id="li_cern_accountlinks" class="cern-accountlinks">
+          <span ID="lblSignedInAs" >
+            <span>Signed in as: <span class="cern-account">{{ request.user.username }} </span> </span>
+          </span>
+          <a class="cern-signout" title="Sign out" href="{% url 'logout' %}">Sign out</a>
+        </li>
+        <li><a class="cern-directory" href="http://cern.ch/directory" title="Search CERN resources and browse the directory">Directory</a></li>
+      </ul>
+    </div>

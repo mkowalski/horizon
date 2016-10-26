@@ -11,7 +11,6 @@ body:not(#splash) {
 // this value is customized, then this value must change to compensate
 $navbar-border-size: 1px !default;
 $navbar-true-height: $navbar-height + $navbar-border-size !default;
-$navbar-true-height-cern: ($navbar-true-height + 40px);
 
 #main_content {
   height: 100%;
