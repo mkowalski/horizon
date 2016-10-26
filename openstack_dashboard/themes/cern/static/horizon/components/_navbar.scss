@@ -1,0 +1,10 @@
+.context-delimiter {
+  @extend .mdi-stop;
+  color: $gray-light;
+  font-size: $font-size-small;
+}
+
+.navbar-fixed-top {
+  top: 40px;
+  border-width: 0 0 1px;
+}

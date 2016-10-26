@@ -11,7 +11,6 @@ body:not(#splash) {
 // this value is customized, then this value must change to compensate
 $navbar-border-size: 1px !default;
 $navbar-true-height: $navbar-height + $navbar-border-size !default;
-$navbar-true-height-cern: ($navbar-true-height + 40px);
 
 #main_content {
   height: 100%;
@@ -20,14 +19,12 @@ $navbar-true-height-cern: ($navbar-true-height + 40px);
 }
 
 #sidebar {
-  float: left;
+  position: fixed;
 }
 
-// Always show the side nav on larger screens
-@media(min-width: $screen-sm-min) {
-  #content_body {
-    padding-left: $sidebar-width;
-  }
+#content_body {
+  width: 100%;
+  padding-left: $sidebar-width;
 }
 
 .page-header {

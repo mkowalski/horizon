@@ -1,0 +1,34 @@
+.d3_quota_bar {
+  text-align: center;
+
+  .pie-chart-usage {
+    width: $font-size-h2 * 3;
+    display: inline-block;
+  }
+}
+
+@media (min-width: $screen-lg) {
+  .col-lg-man {
+    width: 20%;
+  }
+}
+
+.quota-dynamic {
+  overflow: hidden;
+  padding-bottom: $padding-large-horizontal;
+}
+
+.quota_title {
+  font-size: $font-size-h6;
+  margin-bottom: 0;
+  @include clearfix();
+
+  & > span {
+    color: $gray-light;
+  }
+}
+
+// This extend is important as it inherits the padding as well as font size
+.quota_subtitle {
+  @extend .h6;
+}
