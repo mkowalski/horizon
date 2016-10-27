@@ -78,12 +78,6 @@
       .setListFunction(imagesService.getImagesPromise)
       .tableColumns
       .append({
-        id: 'owner',
-        priority: 1,
-        filters: [$memoize(keystone.getProjectName)],
-        policies: [{rules: [['identity', 'identity:get_project']]}]
-      })
-      .append({
         id: 'name',
         priority: 1,
         sortDefault: true,
