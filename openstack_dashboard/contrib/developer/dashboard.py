@@ -21,6 +21,7 @@ class Developer(horizon.Dashboard):
     name = _("Developer")
     slug = "developer"
     default_panel = "theme_preview"
+    permissions = ('openstack.roles.admin',)
 
 
 horizon.register(Developer)
