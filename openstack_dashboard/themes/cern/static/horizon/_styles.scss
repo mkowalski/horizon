@@ -139,3 +139,19 @@ h1 {
   margin-bottom: 20px;
 }
 
+.flavor_table {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.flavor_table .flavor_name {
+  white-space: nowrap;
+  font-weight: bold;
+  text-align: left;
+  padding: 7px 12px 7px 7px;
+  width: 160px;
+}
+
+.no_such_volume_type {
+  color: red;
+}

@@ -261,6 +261,7 @@ class CreateForm(forms.SelfHandlingForm):
             self.fields['volume_source_type'].choices = choices
         else:
             del self.fields['volume_source_type']
+        del self.fields['availability_zone']
 
     def __init__(self, request, *args, **kwargs):
         super(CreateForm, self).__init__(request, *args, **kwargs)
@@ -271,14 +272,12 @@ class CreateForm(forms.SelfHandlingForm):
             redirect_url = reverse("horizon:project:volumes:index")
             error_message = _('Unable to retrieve the volume type list.')
             exceptions.handle(request, error_message, redirect=redirect_url)
-        self.fields['type'].choices = [("", _("No volume type"))] + \
-                                      [(type.name, type.name)
-                                       for type in volume_types]
-        if 'initial' in kwargs and 'type' in kwargs['initial']:
-            # if there is a default volume type to select, then remove
-            # the first ""No volume type" entry
-            self.fields['type'].choices.pop(0)
-
+        # Put standard type first by default
+        std = [t for t in volume_types if t.name == 'standard']
+        if std:
+            volume_types.insert(0, volume_types.pop(volume_types.index(std[0])))
+        self.fields['type'].choices = [(type.name, type.name)
+                                        for type in volume_types]
         if "snapshot_id" in request.GET:
             self.prepare_source_fields_if_snapshot_specified(request)
         elif 'image_id' in request.GET:

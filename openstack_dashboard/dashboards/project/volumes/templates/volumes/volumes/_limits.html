@@ -6,10 +6,14 @@
 
 <div id="id_show_volume_type_desc_div">
   <h3>{% trans "Volume Type Description:" %}</h3>
-  <h4>
-    <strong id="id_show_volume_type_name"></strong>
-  </h4>
-  <p id="id_show_volume_type_desc"></p>
+  <table class="flavor_table table-striped">
+    <tbody>
+      <tr><td class="flavor_name">{% trans "Type" %}</td><td><span id="type_name"></span></td></tr>
+      <tr><td class="flavor_name">{% trans "Usage" %}</td><td><span id="type_usage"></span></td><td></tr>
+      <tr><td class="flavor_name">{% trans "Max IOPS" %}</td><td><span id="type_iops"></span></td></tr>
+      <tr><td class="flavor_name">{% trans "Max Throughput" %}</td><td><span id="type_throughput"></span></td></tr>
+    </tbody>
+  </table>
 </div>
 
 <h3>{% block head %}{% trans "Volume Limits" %}{% endblock %}</h3>
@@ -58,12 +62,68 @@
 </div>
 {{ endminifyspace }}
 
+{% for volume_type in typenames %}
+  <div id="type_{{volume_type}}">
+    {% with used_gigabytes="used_gigabytes_"|add:volume_type total_gigabytes="total_gigabytes_"|add:volume_type %}
+      {% if usages|get_item:total_gigabytes != 0 %}
+        <div class="quota_title">
+          <div class="pull-left">
+            <strong>{% trans "Total Gibibytes for " %} {{ volume_type }}</strong>
+            <span>({{ usages|get_item:used_gigabytes|intcomma }} {% trans "GiB" %})</span>
+          </div>
+          <span class="pull-right">{{ usages|get_item:total_gigabytes|quota:_("GiB")|intcomma }}</span>
+        </div>
+
+        {{ minifyspace }}
+        <div id="{{volume_type}}_quota_size"
+             data-progress-indicator-for="id_size"
+             data-quota-limit="{{ usages|get_item:total_gigabytes }}"
+             data-quota-used="{{ usages|get_item:used_gigabytes }}"
+             class="quota_bar">
+          {% widthratio usages|get_item:used_gigabytes usages|get_item:total_gigabytes 100 as gigabytes_percent %}
+          {% bs_progress_bar gigabytes_percent 0 %}
+        </div>
+        {{ endminifyspace }}
+      {% else %}
+        <h5><div class="no_such_volume_type">No access to selected volume type!</div></h5>
+      {% endif %}
+    {% endwith %}
+
+    {% with used_volumes="used_volumes_"|add:volume_type total_volumes="total_volumes_"|add:volume_type %}
+      {% if usages|get_item:total_volumes != 0 %}
+        <div class="quota_title">
+          <div class="pull-left">
+            <strong>{% trans "Number of Volumes for " %}{{ volume_type }}</strong>
+            <span>({{ usages|get_item:used_volumes|intcomma }})</span>
+          </div>
+          <span class="pull-right">{{ usages|get_item:total_volumes|quota|intcomma }}</span>
+        </div>
+
+        {{ minifyspace }}
+        <div id="{{volume_type}}_quota_volumes"
+             data-quota-limit="{{ usages|get_item:total_volumes}}"
+             data-quota-used="{{ usages|get_item:used_volumes }}"
+             class="quota_bar">
+          {% widthratio usages|get_item:used_volumes usages|get_item:total_volumes 100 as volumes_percent %}
+          {% if usages.numRequestedItems %}
+            {% widthratio 100 usages|get_item:total_volumes usages.numRequestedItems as single_step %}
+          {% else %}
+            {% widthratio 100 usages|get_item:total_volumes 1 as single_step %}
+          {% endif %}
+          {% bs_progress_bar volumes_percent single_step %}
+        </div>
+        {{ endminifyspace }}
+      {% endif %}
+    {% endwith %}
+  </div>
+{% endfor %}
+
 <script type="text/javascript" charset="utf-8">
   if(typeof horizon.Quota !== 'undefined') {
-    horizon.Quota.init();
+    horizon.Quota.initWithTypes({{ types|safe|default:"{}" }});
   } else {
     addHorizonLoadEvent(function() {
-      horizon.Quota.init();
+      horizon.Quota.initWithTypes({{ types|safe|default:"{}" }});
     });
   }
 
