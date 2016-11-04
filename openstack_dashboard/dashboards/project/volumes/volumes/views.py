@@ -18,6 +18,8 @@ Views for managing volumes.
 
 import json
 
+from django.conf import settings
+
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django import http
@@ -116,6 +118,20 @@ class CreateView(forms.ModalFormView):
         context = super(CreateView, self).get_context_data(**kwargs)
         try:
             context['usages'] = quotas.tenant_limit_usages(self.request)
+            volume_types = cinder.volume_type_list(self.request)
+            #decorate types with info from settings
+            tmeta = getattr(settings, 'VOLUME_TYPE_META', {})
+            types = []
+            for t in volume_types:
+                type = {}
+                type['name'] = t.name
+                type['usage'] = tmeta[t.name]['usage'] if t.name in tmeta else 'None'
+                type['hypervisor'] = tmeta[t.name]['hypervisor'] if t.name in tmeta else 'None'
+                type['iops'] = tmeta[t.name]['iops'] if t.name in tmeta else 'None'
+                type['throughput'] = tmeta[t.name]['throughput'] if t.name in tmeta else 'None'
+                types.append(type)
+            context['types'] = json.dumps(types)
+            context['typenames'] = [t.name for t in volume_types]
             context['volume_types'] = self._get_volume_types()
         except Exception:
             exceptions.handle(self.request)
@@ -173,6 +189,7 @@ class ExtendView(forms.ModalFormView):
         context['volume'] = self.get_object()
         args = (self.kwargs['volume_id'],)
         context['submit_url'] = reverse(self.submit_url, args=args)
+        context['type'] = context['volume'].volume_type;
         try:
             usages = quotas.tenant_limit_usages(self.request)
             usages['gigabytesUsed'] = (usages['gigabytesUsed']
