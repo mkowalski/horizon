@@ -261,9 +261,13 @@ class SetInstanceDetailsAction(workflows.Action):
         image = self._get_image(image_id)
         flavor_id = cleaned_data.get('flavor')
         flavor = self._get_flavor(flavor_id)
+        source_type = cleaned_data.get('source_type')
         if not image or not flavor:
             return
-        props_mapping = (("min_ram", "ram"), ("min_disk", "disk"))
+        props_mapping = (("min_ram", "ram"),)
+        volume_sources = ('volume_id', 'volume_image_id', 'volume_snapshot_id')
+        if source_type not in volume_sources:
+            props_mapping += (("min_disk", "disk"),)
         for iprop, fprop in props_mapping:
             if getattr(image, iprop) > 0 and \
                     getattr(image, iprop) > getattr(flavor, fprop):

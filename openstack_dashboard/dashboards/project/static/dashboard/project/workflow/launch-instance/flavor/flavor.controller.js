@@ -160,6 +160,13 @@
       ctrl.validateFlavor();
     });
 
+    var createVolumeWatcher = $scope.$watchCollection(function() {
+      return launchInstanceModel.newInstanceSpec.vol_create;
+    }, function (newValue, oldValue, scope) {
+      scope.selectFlavorCtrl.updateFlavorFacades();
+      scope.selectFlavorCtrl.validateFlavor();
+    });
+
     //
     $scope.$on('$destroy', function() {
       novaLimitsWatcher();
@@ -167,6 +174,7 @@
       instanceCountWatcher();
       facadesWatcher();
       sourceWatcher();
+      createVolumeWatcher();
     });
 
     //////////
@@ -328,8 +336,10 @@
 
       // Check source minimum requirements against this flavor
       var sourceType = launchInstanceModel.newInstanceSpec.source_type;
+      var volCreate = launchInstanceModel.newInstanceSpec.vol_create;
       if (source && sourceType &&
-        (sourceType.type === 'image' || sourceType.type === 'snapshot')) {
+        (sourceType.type === 'image' || sourceType.type === 'snapshot') &&
+        !volCreate) {
         if (source.min_disk > 0 && source.min_disk > flavor.disk) {
           /*eslint-disable max-len */
           var srcMinDiskMsg = gettext('The selected %(sourceType)s source requires a flavor with at least %(minDisk)s GB of root disk. Select a flavor with a larger root disk or use a different %(sourceType)s source.');
