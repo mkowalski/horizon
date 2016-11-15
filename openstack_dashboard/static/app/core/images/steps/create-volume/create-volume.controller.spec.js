@@ -139,7 +139,7 @@
       var ctrl = createController();
       var graph = ctrl.storageQuota;
 
-      expect(graph.title).toEqual('Volume and Snapshot Quota (GB)');
+      expect(graph.title).toEqual('Volume Quota (GB)');
       expect(graph.maxLimit).toEqual(2);
       expect(graph.label).toEqual('100%');
 
