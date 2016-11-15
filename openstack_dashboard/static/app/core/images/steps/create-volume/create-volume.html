@@ -44,18 +44,6 @@
             </div>
           </div>
         </div>
-        <div class="form-group">
-          <label for="availability-zone" class="control-label">
-            <span translate>Availability Zone</span>
-            <span class="hz-icon-required fa fa-asterisk"></span>
-          </label>
-          <select ng-options="item for item in createVolumeCtrl.availabilityZones"
-                  class="form-control"
-                  id="availability-zone"
-                  ng-model="createVolumeCtrl.volume.availability_zone"
-                  ng-required="true">
-          </select>
-        </div>
       </div>
       <div class="col-xs-6">
         <pie-chart chart-data="createVolumeCtrl.storageQuota"></pie-chart>
