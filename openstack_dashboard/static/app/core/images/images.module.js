@@ -97,6 +97,10 @@
         priority: 1
       })
       .append({
+        id: 'recommended',
+        priority: 1
+      })
+      .append({
         id: 'protected',
         priority: 1
       })
@@ -142,6 +146,16 @@
           {label: gettext('Private'), key: 'private'},
           {label: gettext('Shared With Project'), key: 'shared'},
           {label: gettext('Unknown'), key: 'unknown'}
+        ]
+      })
+      .append({
+        label: gettext('Recommended'),
+        name: 'recommended',
+        isServer: false,
+        singleton: true,
+        options: [
+          {label: gettext('Yes'), key: 'true'},
+          {label: gettext('No'), key: 'false'}
         ]
       })
       .append({
@@ -250,7 +264,8 @@
       type: { label: gettext('Type'), filters: [imagesService.imageType] },
       'protected': { label: gettext('Protected'), filters: ['yesno'] },
       size: { label: gettext('Size'), filters: ['bytes'] },
-      status: { label: gettext('Status'), values: statuses }
+      status: { label: gettext('Status'), values: statuses },
+      recommended: { label: gettext('Recommended'), filters: ['yesno'] }
     };
   }
 
