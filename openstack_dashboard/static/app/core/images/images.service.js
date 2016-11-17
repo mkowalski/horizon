@@ -107,7 +107,7 @@
 
       function getImages(userSession) {
         projectId = userSession.project_id;
-        return glance.getImages(params).then(modifyResponse);
+        return glance.getImages(params).then(modifyResponse).then(filterNewImages);
       }
 
       function modifyResponse(response) {
@@ -118,6 +118,26 @@
           image.visibility = $filter('imageVisibility')(image, projectId);
           return image;
         }
+      }
+
+      function filterNewImages(response) {
+        var parsedImagesMap = {};
+
+        response.data.items.forEach( function(entry) {
+          entry.recommended = false;
+
+          var imageName = new RegExp(/[^\[]*/g).exec(entry.name)[0] || entry.name;
+          (parsedImagesMap[imageName] = parsedImagesMap[imageName] || []).push(
+            { date:new Date(entry.created_at), object:entry } );
+        } );
+
+        Object.keys(parsedImagesMap).forEach( function(key) {
+          this[key].sort( function(a,b) { return a.date < b.date; } );
+          this[key][0].object.recommended = true;
+        }, parsedImagesMap );
+
+        console.log(response);
+        return response;
       }
     }
 

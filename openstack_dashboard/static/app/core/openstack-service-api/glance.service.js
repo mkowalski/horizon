@@ -322,6 +322,9 @@
      * @returns {Object} The result of the API call
      */
     function getImages(params) {
+      // TODO In here ignore 'visibility' and 'recommended' parameters
+      // if params.recommended !== undefined
+      // if params.Visibility !== undefined
       var config = params ? { 'params' : params} : {};
       return apiService.get('/api/glance/images/', config)
         .error(function () {
