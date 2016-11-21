@@ -606,6 +606,7 @@
     function onGetImages(data) {
       model.images.length = 0;
       push.apply(model.images, data.data.items.filter(function (image) {
+        image.recommended = image.properties.recommended === "true";
         return isBootableImageType(image) &&
           (!image.properties || image.properties.image_type !== 'snapshot');
       }));

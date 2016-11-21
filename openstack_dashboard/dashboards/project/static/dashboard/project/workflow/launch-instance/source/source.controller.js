@@ -136,7 +136,7 @@
         { text: gettext('Updated'), sortable: true },
         { text: gettext('Size'), classList: ['number'], sortable: true },
         { text: gettext('Type'), sortable: true },
-        { text: gettext('Visibility'), sortable: true }
+        { text: gettext('Recommended'), sortable: true }
       ],
       snapshot: [
         { text: gettext('Name'), sortable: true, sortDefault: true },
@@ -163,6 +163,7 @@
 
     // Map Visibility data so we can decode true/false to Public/Private
     var _visibilitymap = { true: gettext('Public'), false: gettext('Private') };
+    var _recommendationmap = { true: gettext('Yes'), false: gettext('No') };
 
     // Mapping for dynamic table data
     var tableBodyCellsMap = {
@@ -171,7 +172,7 @@
         { key: 'updated_at', filter: dateFilter, filterArg: 'short' },
         { key: 'size', filter: bytesFilter, classList: ['number'] },
         { key: 'disk_format', filter: diskFormatFilter, filterRawData: true },
-        { key: 'is_public', filter: decodeFilter, filterArg: _visibilitymap }
+        { key: 'recommended', filter: decodeFilter, filterArg: _recommendationmap }
       ],
       snapshot: [
         { key: 'name', classList: ['hi-light', 'word-break'] },
@@ -264,6 +265,15 @@
           { label: gettext('Private'), key: 'false' }
         ]
       },
+      recommendation: {
+        label: gettext('Recommended'),
+        name: 'recommended',
+        singleton: true,
+        options: [
+          { label: gettext('Yes'), key: 'true' },
+          { label: gettext('No'), key: 'false' }
+        ]
+      },
       volumeType: {
         label: gettext('Type'),
         name: 'volume_image_metadata.disk_format',
@@ -275,7 +285,7 @@
     // Mapping for filter facets based on boot source type
     var sourceTypeFacets = {
       image: [
-        facets.name, facets.updated, facets.size, facets.type, facets.visibility
+        facets.name, facets.updated, facets.size, facets.type, facets.recommendation
       ],
       snapshot: [
         facets.name, facets.updated, facets.size, facets.type, facets.visibility
