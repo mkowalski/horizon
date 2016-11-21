@@ -55,14 +55,6 @@ class DownloadOpenRC(tables.LinkAction):
         return utils.get_keystone_version() >= 3
 
 
-class DownloadOpenRCv2(tables.LinkAction):
-    name = "download_openrc_v2"
-    verbose_name = _("Download OpenStack RC File v2.0")
-    verbose_name_plural = _("Download OpenStack RC File v2.0")
-    icon = "download"
-    url = "horizon:project:api_access:openrcv2"
-
-
 class ViewCredentials(tables.LinkAction):
     name = "view_credentials"
     verbose_name = _("View Credentials")
@@ -106,5 +98,5 @@ class EndpointsTable(tables.DataTable):
         name = "endpoints"
         verbose_name = _("API Endpoints")
         multi_select = False
-        table_actions = (DownloadOpenRCv2, DownloadOpenRC, DownloadEC2,
+        table_actions = (DownloadOpenRC, DownloadEC2,
                          ViewCredentials, RecreateCredentials)

@@ -23,7 +23,6 @@ urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
     url(r'^ec2/$', views.download_ec2_bundle, name='ec2'),
     url(r'^openrc/$', views.download_rc_file, name='openrc'),
-    url(r'^openrcv2/$', views.download_rc_file_v2, name='openrcv2'),
     url(r'^view_credentials/$', views.CredentialsView.as_view(),
         name='view_credentials'),
     url(r'^recreate_ec2_credentials/$',
