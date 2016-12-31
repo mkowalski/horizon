@@ -1,5 +1,11 @@
 {% load shellfilter %}#!/usr/bin/env bash
 
+# Unset variables to allow it to work on aiadm
+unset OS_IDENTITY_API_VERSION
+unset OS_PROJECT_DOMAIN_ID
+unset OS_USER_DOMAIN_ID
+unset OS_AUTH_TYPE
+
 # To use an OpenStack cloud you need to authenticate against the Identity
 # service named keystone, which returns a **Token** and **Service Catalog**.
 # The catalog contains the endpoints for all services the user/tenant has
