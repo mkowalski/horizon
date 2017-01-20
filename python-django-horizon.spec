@@ -272,6 +272,9 @@ cp openstack_dashboard/local/local_settings.py.example openstack_dashboard/local
 # Fix hidden-file-or-dir warnings
 rm -fr html/.doctrees html/.buildinfo
 
+%pretrans
+systemctl stop httpd
+
 %install
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 
@@ -341,6 +344,9 @@ systemctl daemon-reload >/dev/null 2>&1 || :
 %postun
 # update systemd unit files
 %{systemd_postun}
+
+%posttrans
+systemctl start httpd
 
 %files -f horizon.lang
 %doc README.rst openstack-dashboard-httpd-logging.conf
