@@ -33,6 +33,8 @@ from openstack_dashboard.dashboards.project.volumes.snapshots \
 from openstack_dashboard.dashboards.project.volumes.volumes \
     import tables as volume_tables
 
+import threading
+
 
 class VolumeTableMixIn(object):
     _has_more_data = False
@@ -141,10 +143,46 @@ class VolumeTab(PagedTableMixin, tabs.TableTab, VolumeTableMixIn):
     preload = False
 
     def get_volumes_data(self):
-        volumes = self._get_volumes()
-        attached_instance_ids = self._get_attached_instance_ids(volumes)
-        instances = self._get_instances(instance_ids=attached_instance_ids)
-        volume_ids_with_snapshots = self._get_volumes_ids_with_snapshots()
+        volumes = []
+        attached_instance_ids = []
+        instances = []
+        volume_ids_with_snapshots = []
+
+        def _task_get_volumes():
+            volumes.extend(self._get_volumes())
+            attached_instance_ids.extend(
+                self._get_attached_instance_ids(volumes))
+
+        def _task_get_instances():
+            # As long as Nova API does not allow passing attached_instance_ids
+            # to nova.server_list, this call can be forged to pass anything
+            # != None
+            instances.extend(self._get_instances(instance_ids=[[]]))
+
+            # In volumes tab we don't need to know about the assignment
+            # instance-image, therefore fixing it to an empty value
+            for instance in instances:
+                if hasattr(instance, 'image'):
+                    if isinstance(instance.image, dict):
+                        instance.image['name'] = _("-")
+
+        def _task_get_volumes_snapshots():
+            volume_ids_with_snapshots.extend(
+                self._get_volumes_ids_with_snapshots())
+
+        thread_get_volumes = threading.Thread(target=_task_get_volumes)
+        thread_get_instances = threading.Thread(target=_task_get_instances)
+        thread_get_volumes_snapshots = threading.Thread(
+            target=_task_get_volumes_snapshots)
+
+        thread_get_volumes.start()
+        thread_get_instances.start()
+        thread_get_volumes_snapshots.start()
+
+        thread_get_volumes.join()
+        thread_get_instances.join()
+        thread_get_volumes_snapshots.join()
+
         self._set_volume_attributes(
             volumes, instances, volume_ids_with_snapshots)
         return volumes
