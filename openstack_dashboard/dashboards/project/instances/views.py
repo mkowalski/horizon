@@ -20,6 +20,7 @@
 Views for managing instances.
 """
 from collections import OrderedDict
+import futurist
 import logging
 
 from django.conf import settings
@@ -67,18 +68,26 @@ class IndexView(tables.DataTableView):
         marker = self.request.GET.get(
             project_tables.InstancesTable._meta.pagination_param, None)
         search_opts = self.get_filters({'marker': marker, 'paginate': True})
-        # Gather our instances
-        try:
-            instances, self._more = api.nova.server_list(
-                self.request,
-                search_opts=search_opts)
-        except Exception:
-            self._more = False
-            instances = []
-            exceptions.handle(self.request,
-                              _('Unable to retrieve instances.'))
 
-        if instances:
+        instances = []
+        full_flavors = {}
+        image_map = {}
+
+        def _task_get_instances():
+            # Gather our instances
+            try:
+                tmp_instances, self._more = api.nova.server_list(
+                    self.request,
+                    search_opts=search_opts)
+                instances.extend(tmp_instances)
+            except Exception:
+                self._more = False
+                exceptions.handle(self.request,
+                                  _('Unable to retrieve instances.'))
+                # In case of exception when calling nova.server_list
+                # don't call api.network
+                return
+
             try:
                 api.network.servers_update_addresses(self.request, instances)
             except Exception:
@@ -87,47 +96,56 @@ class IndexView(tables.DataTableView):
                     message=_('Unable to retrieve IP addresses from Neutron.'),
                     ignore=True)
 
-            # Gather our flavors and images and correlate our instances to them
+        def _task_get_flavors():
+            # Gather our flavors to correlate our instances to them
             try:
                 flavors = api.nova.flavor_list(self.request)
+                full_flavors.update([(str(flavor.id), flavor)
+                                     for flavor in flavors])
             except Exception:
-                flavors = []
                 exceptions.handle(self.request, ignore=True)
 
+        def _task_get_images():
+            # Gather our images to correlate our instances to them
             try:
                 # TODO(gabriel): Handle pagination.
-                images, more, prev = api.glance.image_list_detailed(
-                    self.request)
+                images = api.glance.image_list_detailed(self.request)[0]
+                image_map.update([(str(image.id), image) for image in images])
             except Exception:
-                images = []
                 exceptions.handle(self.request, ignore=True)
 
-            full_flavors = OrderedDict([(str(flavor.id), flavor)
-                                       for flavor in flavors])
-            image_map = OrderedDict([(str(image.id), image)
-                                    for image in images])
+        with futurist.ThreadPoolExecutor(max_workers=3) as e:
+            e.submit(fn=_task_get_instances)
+            e.submit(fn=_task_get_flavors)
+            e.submit(fn=_task_get_images)
 
-            # Loop through instances to get flavor info.
-            for instance in instances:
-                if hasattr(instance, 'image'):
-                    # Instance from image returns dict
-                    if isinstance(instance.image, dict):
-                        if instance.image.get('id') in image_map:
-                            instance.image = image_map[instance.image['id']]
-
-                try:
-                    flavor_id = instance.flavor["id"]
-                    if flavor_id in full_flavors:
-                        instance.full_flavor = full_flavors[flavor_id]
+        # Loop through instances to get flavor info.
+        for instance in instances:
+            if hasattr(instance, 'image'):
+                # Instance from image returns dict
+                if isinstance(instance.image, dict):
+                    if instance.image.get('id') in image_map:
+                        instance.image = image_map[instance.image.get('id')]
+                    # In case image not found in image_map, set name to empty
+                    # to avoid fallback API call to Glance in api/nova.py
+                    # until the call is deprecated in api itself
                     else:
-                        # If the flavor_id is not in full_flavors list,
-                        # get it via nova api.
-                        instance.full_flavor = api.nova.flavor_get(
-                            self.request, flavor_id)
-                except Exception:
-                    msg = ('Unable to retrieve flavor "%s" for instance "%s".'
-                           % (flavor_id, instance.id))
-                    LOG.info(msg)
+                        instance.image['name'] = _("-")
+
+            try:
+                flavor_id = instance.flavor["id"]
+                if flavor_id in full_flavors:
+                    instance.full_flavor = full_flavors[flavor_id]
+                else:
+                    # If the flavor_id is not in full_flavors list,
+                    # get it via nova api.
+                    instance.full_flavor = api.nova.flavor_get(
+                        self.request, flavor_id)
+            except Exception:
+                msg = ('Unable to retrieve flavor "%s" for instance "%s".'
+                       % (flavor_id, instance.id))
+                LOG.info(msg)
+
         return instances
 
 

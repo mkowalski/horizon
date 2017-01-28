@@ -17,8 +17,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from collections import OrderedDict
-
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
@@ -37,6 +35,8 @@ from openstack_dashboard.dashboards.admin.instances \
 from openstack_dashboard.dashboards.project.instances import views
 from openstack_dashboard.dashboards.project.instances.workflows \
     import update_instance
+
+import futurist
 
 
 # re-use console from project.instances.views to make reflection work
@@ -77,6 +77,11 @@ class AdminIndexView(tables.DataTableView):
 
     def get_data(self):
         instances = []
+        tenants = []
+        tenant_dict = {}
+        flavors = []
+        full_flavors = {}
+
         marker = self.request.GET.get(
             project_tables.AdminInstancesTable._meta.pagination_param, None)
         default_search_opts = {'marker': marker, 'paginate': True}
@@ -94,34 +99,43 @@ class AdminIndexView(tables.DataTableView):
             return instances
 
         self._needs_filter_first = False
-        # Gather our tenants to correlate against IDs
-        try:
-            tenants, has_more = api.keystone.tenant_list(self.request)
-        except Exception:
-            tenants = []
-            msg = _('Unable to retrieve instance project information.')
-            exceptions.handle(self.request, msg)
 
-        if 'project' in search_opts:
-            ten_filter_ids = [t.id for t in tenants
-                              if t.name == search_opts['project']]
-            del search_opts['project']
-            if len(ten_filter_ids) > 0:
-                search_opts['tenant_id'] = ten_filter_ids[0]
-            else:
+        def _task_get_tenants():
+            # Gather our tenants to correlate against IDs
+            try:
+                tmp_tenants, __ = api.keystone.tenant_list(self.request)
+                tenants.extend(tmp_tenants)
+                tenant_dict.update([(t.id, t) for t in tenants])
+            except Exception:
+                msg = _('Unable to retrieve instance project information.')
+                exceptions.handle(self.request, msg)
+
+        def _task_get_flavors():
+            # Gather our flavors to correlate against IDs
+            try:
+                tmp_flavors = api.nova.flavor_list(self.request)
+                flavors.extend(tmp_flavors)
+                full_flavors.update([(str(flavor.id), flavor)
+                                     for flavor in flavors])
+            except Exception:
+                msg = _("Unable to retrieve flavor list.")
+                exceptions.handle(self.request, msg)
+
+        def _task_get_instances():
+            try:
+                tmp_instances, self._more = api.nova.server_list(
+                    self.request,
+                    search_opts=search_opts,
+                    all_tenants=True)
+                instances.extend(tmp_instances)
+            except Exception:
                 self._more = False
-                return []
+                exceptions.handle(self.request,
+                                  _('Unable to retrieve instance list.'))
+                # In case of exception when calling nova.server_list
+                # don't call api.network
+                return
 
-        try:
-            instances, self._more = api.nova.server_list(
-                self.request,
-                search_opts=search_opts,
-                all_tenants=True)
-        except Exception:
-            self._more = False
-            exceptions.handle(self.request,
-                              _('Unable to retrieve instance list.'))
-        if instances:
             try:
                 api.network.servers_update_addresses(self.request, instances,
                                                      all_tenants=True)
@@ -131,31 +145,27 @@ class AdminIndexView(tables.DataTableView):
                     message=_('Unable to retrieve IP addresses from Neutron.'),
                     ignore=True)
 
-            # Gather our flavors to correlate against IDs
-            try:
-                flavors = api.nova.flavor_list(self.request)
-            except Exception:
-                # If fails to retrieve flavor list, creates an empty list.
-                flavors = []
+        with futurist.ThreadPoolExecutor(max_workers=3) as e:
+            e.submit(fn=_task_get_tenants)
+            e.submit(fn=_task_get_flavors)
+            e.submit(fn=_task_get_instances)
 
-            full_flavors = OrderedDict([(f.id, f) for f in flavors])
-            tenant_dict = OrderedDict([(t.id, t) for t in tenants])
-            # Loop through instances to get flavor and tenant info.
-            for inst in instances:
-                flavor_id = inst.flavor["id"]
-                try:
-                    if flavor_id in full_flavors:
-                        inst.full_flavor = full_flavors[flavor_id]
-                    else:
-                        # If the flavor_id is not in full_flavors list,
-                        # gets it via nova api.
-                        inst.full_flavor = api.nova.flavor_get(
-                            self.request, flavor_id)
-                except Exception:
-                    msg = _('Unable to retrieve instance size information.')
-                    exceptions.handle(self.request, msg)
-                tenant = tenant_dict.get(inst.tenant_id, None)
-                inst.tenant_name = getattr(tenant, "name", None)
+        # Loop through instances to get flavor and tenant info.
+        for inst in instances:
+            flavor_id = inst.flavor["id"]
+            try:
+                if flavor_id in full_flavors:
+                    inst.full_flavor = full_flavors[flavor_id]
+                else:
+                    # If the flavor_id is not in full_flavors list,
+                    # gets it via nova api.
+                    inst.full_flavor = api.nova.flavor_get(
+                        self.request, flavor_id)
+            except Exception:
+                msg = _('Unable to retrieve instance size information.')
+                exceptions.handle(self.request, msg)
+            tenant = tenant_dict.get(inst.tenant_id, None)
+            inst.tenant_name = getattr(tenant, "name", None)
         return instances
 
 
