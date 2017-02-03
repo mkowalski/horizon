@@ -241,7 +241,6 @@
           novaAPI.getKeypairs().then(onGetKeypairs, noop),
           novaAPI.getLimits(true).then(onGetNovaLimits, noop),
           securityGroup.query().then(onGetSecurityGroups, noop),
-          serviceCatalog.ifTypeEnabled('network').then(getNetworks, noop),
           launchInstanceDefaults.then(addImageSourcesIfEnabled, noop),
           launchInstanceDefaults.then(setDefaultValues, noop),
           launchInstanceDefaults.then(addVolumeSourcesIfEnabled, noop)

@@ -53,22 +53,6 @@
           formName: 'launchInstanceFlavorForm'
         },
         {
-          id: 'networks',
-          title: gettext('Networks'),
-          templateUrl: basePath + 'network/network.html',
-          helpUrl: basePath + 'network/network.help.html',
-          formName: 'launchInstanceNetworkForm',
-          requiredServiceTypes: ['network']
-        },
-        {
-          id: 'ports',
-          title: gettext('Network Ports'),
-          templateUrl: basePath + 'networkports/ports.html',
-          helpUrl: basePath + 'networkports/ports.help.html',
-          formName: 'launchInstanceNetworkPortForm',
-          requiredServiceTypes: ['network']
-        },
-        {
           id: 'keypair',
           title: gettext('Key Pair'),
           templateUrl: basePath + 'keypair/keypair.html',
