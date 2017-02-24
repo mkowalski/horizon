@@ -85,7 +85,7 @@ class IndexView(tables.DataTableView):
                                   _('Unable to retrieve instances.'))
                 # In case of exception when calling nova.server_list
                 # don't call api.network
-                return
+                # return
 
             try:
                 api.network.servers_update_addresses(self.request, instances)
