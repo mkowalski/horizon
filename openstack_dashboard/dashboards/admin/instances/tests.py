@@ -142,7 +142,7 @@ class InstanceViewTest(test.BaseAdminViewTests):
         # Since error messages produced for each instance are identical,
         # there will be only two error messages for all instances
         # (messages de-duplication).
-        self.assertMessageCount(res, error=2)
+        self.assertMessageCount(res, error=1)
         self.assertItemsEqual(instances, servers)
 
     @test.create_stubs({
