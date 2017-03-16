@@ -15,12 +15,12 @@
 """
 Admin views for managing volumes and snapshots.
 """
-from collections import OrderedDict
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
+import futurist
 
 from horizon import exceptions
 from horizon import forms
@@ -59,10 +59,56 @@ class VolumesView(tables.PagedTableMixin, volumes_views.VolumeTableMixIn,
             self.table.needs_filter_first = True
             return volumes
 
+        volumes = []
+        attached_instance_ids = []
+        tenants = []
+        tenant_dict = {}
+        instances = []
+        volume_ids_with_snapshots = []
+
+        def _task_get_tenants():
+            # Gather our tenants to correlate against IDs
+            try:
+                tmp_tenants, __ = keystone.tenant_list(self.request)
+                tenants.extend(tmp_tenants)
+                tenant_dict.update([(t.id, t) for t in tenants])
+            except Exception:
+                msg = _('Unable to retrieve volume project information.')
+                exceptions.handle(self.request, msg)
+
+        def _task_get_instances():
+            # As long as Nova API does not allow passing attached_instance_ids
+            # to nova.server_list, this call can be forged to pass anything
+            # != None
+            instances.extend(self._get_instances(
+                search_opts={'all_tenants': True}, instance_ids=[[]]))
+
+            # In volumes tab we don't need to know about the assignment
+            # instance-image, therefore fixing it to an empty value
+            for instance in instances:
+                if hasattr(instance, 'image'):
+                    if isinstance(instance.image, dict):
+                        instance.image['name'] = _("-")
+
+        def _task_get_volumes_snapshots():
+            volume_ids_with_snapshots.extend(
+                self._get_volumes_ids_with_snapshots(
+                    search_opts={'all_tenants': True}
+                ))
+
+        def _task_get_volumes():
+            volumes.extend(self._get_volumes(search_opts=filters))
+            attached_instance_ids.extend(
+                self._get_attached_instance_ids(volumes))
+
         if 'project' in filters:
-            # Keystone returns a tuple ([],false) where the first element is
-            # tenant list that's why the 0 is hardcoded below
-            tenants = keystone.tenant_list(self.request)[0]
+            # Set max_workers=3 in order to execute all tasks in parallel
+            # no matter of CPU capabilities of the machine
+            with futurist.ThreadPoolExecutor(max_workers=3) as e:
+                e.submit(fn=_task_get_tenants)
+                e.submit(fn=_task_get_instances)
+                e.submit(fn=_task_get_volumes_snapshots)
+
             tenant_ids = [t.id for t in tenants
                           if t.name == filters['project']]
             if not tenant_ids:
@@ -71,26 +117,19 @@ class VolumesView(tables.PagedTableMixin, volumes_views.VolumeTableMixIn,
             for id in tenant_ids:
                 filters['project_id'] = id
                 volumes += self._get_volumes(search_opts=filters)
+            attached_instance_ids = self._get_attached_instance_ids(volumes)
         else:
-            volumes = self._get_volumes(search_opts=filters)
+            # Set max_workers=4 in order to execute all tasks in parallel
+            # no matter of CPU capabilities of the machine
+            with futurist.ThreadPoolExecutor(max_workers=4) as e:
+                e.submit(fn=_task_get_volumes)
+                e.submit(fn=_task_get_tenants)
+                e.submit(fn=_task_get_instances)
+                e.submit(fn=_task_get_volumes_snapshots)
 
-        attached_instance_ids = self._get_attached_instance_ids(volumes)
-        instances = self._get_instances(search_opts={'all_tenants': True},
-                                        instance_ids=attached_instance_ids)
-        volume_ids_with_snapshots = self._get_volumes_ids_with_snapshots(
-            search_opts={'all_tenants': True})
         self._set_volume_attributes(
             volumes, instances, volume_ids_with_snapshots)
 
-        # Gather our tenants to correlate against IDs
-        try:
-            tenants, has_more = keystone.tenant_list(self.request)
-        except Exception:
-            tenants = []
-            msg = _('Unable to retrieve volume project information.')
-            exceptions.handle(self.request, msg)
-
-        tenant_dict = OrderedDict([(t.id, t) for t in tenants])
         for volume in volumes:
             tenant_id = getattr(volume, "os-vol-tenant-attr:tenant_id", None)
             tenant = tenant_dict.get(tenant_id, None)
